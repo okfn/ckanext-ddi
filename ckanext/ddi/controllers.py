@@ -177,6 +177,7 @@ class ImportFromXml(PackageController):
             return self.import_form(data, errors, error_summary)
 
         except Exception as e:
+            log.exception(e)
             errors = {
               'import': _('Dataset import from XML failed: %s' % str(e))
             }
