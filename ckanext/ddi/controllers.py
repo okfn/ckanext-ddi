@@ -152,6 +152,7 @@ class ImportFromXml(PackageController):
                         'format': 'rdf',
                         'url': '',
                         'type': 'attachment',
+                        'file_type': 'other',
                     }
                 )
             elif request.params.get('rdf_url'):
@@ -163,6 +164,7 @@ class ImportFromXml(PackageController):
                         'name': 'DDI RDF',
                         'format': 'rdf',
                         'type': 'attachment',
+                        'file_type': 'other',
                     }
                 )
 
