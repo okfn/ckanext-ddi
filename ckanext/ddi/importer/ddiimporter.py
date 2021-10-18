@@ -21,8 +21,11 @@ class DdiImporter(HarvesterBase):
         self.username = username
 
     def run(self, file_path=None, url=None, params=None, upload=None, data=None):
+        """ Run the import process from uploaded file or from URL """
+
         pkg_dict = None
         ckan_metadata = metadata.DdiCkanMetadata()
+
         if file_path is not None:
             with codecs.open(file_path, 'rb') as xml_file:
                 pkg_dict = ckan_metadata.load(xml_file.read())
@@ -52,6 +55,7 @@ class DdiImporter(HarvesterBase):
                     'format': 'html',
                     'type': 'attachment',
                     'file_type': 'other',
+                    'visibility': data.get('visibility', 'restricted')
                 })
 
             if pkg_dict['url'] == '':
@@ -63,10 +67,12 @@ class DdiImporter(HarvesterBase):
                 'format': 'xml',
                 'type': 'attachment',
                 'file_type': 'other',
+                'visibility': data.get('visibility', 'restricted')
             })
             pkg_dict['resources'] = resources
 
         pkg_dict = self.improve_pkg_dict(pkg_dict, params, data)
+
         try:
             return self.insert_or_update_pkg(pkg_dict, upload)
         except tk.ValidationError as e:
@@ -85,6 +91,9 @@ class DdiImporter(HarvesterBase):
         override_datasets = tk.asbool(
             tk.config.get('ckanext.ddi.override_datasets', False)
         )
+
+        visibility = pkg_dict.pop('visibility', 'restricted')
+
         try:
             existing_pkg = registry.call_action('package_show', pkg_dict)
             if not allow_duplicates and not override_datasets:
@@ -117,6 +126,7 @@ class DdiImporter(HarvesterBase):
                         'url': '',
                         'type': 'attachment',
                         'file_type': 'other',
+                        'visibility': visibility
                     }
                 )
             except Exception as e:
@@ -153,7 +163,7 @@ class DdiImporter(HarvesterBase):
             for field in (
                 'owner_org',
                 'private',
-                'visibility',
+                'visibility',  # for resources
                 'license_id',
                 'external_access_level',
             ):

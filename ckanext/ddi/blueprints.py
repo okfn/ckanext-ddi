@@ -140,7 +140,6 @@ class ImportView(MethodView):
                 u'form_snippet': form_snippet,
                 u'dataset_type': package_type,
                 u'resources_json': json.dumps(data.get('resources', [])),
-                u'form_snippet': form_snippet,
                 u'errors_json': json.dumps(errors),
             },
         )
@@ -184,6 +183,7 @@ class ImportView(MethodView):
                 'url': '',
                 'type': 'attachment',
                 'file_type': 'other',
+                'visibility': data.get('visibility', 'restricted')
             }
             if isinstance(data.get('rdf_upload'), FileStorage):
                 resource_dict['upload'] = data['rdf_upload']
