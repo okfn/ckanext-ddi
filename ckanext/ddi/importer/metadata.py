@@ -263,7 +263,8 @@ class CkanMetadata(object):
             'unit_of_analysis',
             'description_of_scope',
             'country',
-            'geographic_coverage',
+            'country_codes',
+            'geog_coverage',
             'time_period_covered',
             'universe',
             'primary_investigator',
@@ -357,7 +358,13 @@ class DdiCkanMetadata(CkanMetadata):
             ),
             separator=', '
         ),
-        'geographic_coverage': XPathTextValue(
+        'country_codes': ArrayTextValue(
+            XPathMultiTextValue(
+                "//ddi:codeBook/ddi:stdyDscr/ddi:stdyInfo/ddi:sumDscr/ddi:nation/@abbr"  # noqa
+            ),
+            separator=', '
+        ),
+        'geog_coverage': XPathTextValue(
             "//ddi:codeBook/ddi:stdyDscr/ddi:stdyInfo/ddi:sumDscr/ddi:geogCover"  # noqa
         ),
         'time_period_covered': ArrayTextValue(

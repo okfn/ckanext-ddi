@@ -1,3 +1,8 @@
+DDI
+===
+
+The Data Documentation Initiative (DDI) is an international standard available at [ddialliance.org](https://ddialliance.org/)
+
 ckanext-ddi
 ===========
 
