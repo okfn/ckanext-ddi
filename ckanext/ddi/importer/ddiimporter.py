@@ -15,9 +15,6 @@ import ckanapi
 import logging
 log = logging.getLogger(__name__)
 
-# geographies fields is now a required field.
-# We need to ensure any dataset to have a "geographies" field filled
-DEFAULT_COUNTRY_CODE = 'WORLD'
 
 class DdiImporter(HarvesterBase):
     def __init__(self, username=None):
@@ -199,7 +196,9 @@ class DdiImporter(HarvesterBase):
             pkg_dict['short_title'] = pkg_dict['abbreviation']
 
         if not pkg_dict.get('country_codes'):
-            pkg_dict['country_codes'] = DEFAULT_COUNTRY_CODE
+            # geographies fields is now a required field.
+            # We need to ensure any dataset to have a "geographies" field filled
+            pkg_dict['country_codes'] = tk.config.get('ckanext.ddi.default_conuntry_code', 'WORLD')
 
         pkg_dict['ddi'] = True
 
