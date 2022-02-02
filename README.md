@@ -48,18 +48,20 @@ are installed as well.
 ## Configuration
 
 ### CKAN configuration (production.ini)
-Three options are available:
+Available options are:
 
 ```bash
 ckanext.ddi.default_license = CC0-1.0
 ckanext.ddi.allow_duplicates = True
 ckanext.ddi.override_datasets = False
+ckanext.ddi.default_country_code = UNSPECIFIED
 ```
 
 The `config_file` is simply the path to the DDI-specific configuration of this extension (see below).
 The `default_license` allows a user to configure a license that is used for all DDI imports, if the license is not specified explicitly.
 The `allow_duplicates` option is used to determine, if duplicate datasets are allowed or not. Duplicates are determined by the unique `id_number` attribute (defaults to `False`).
 With `override_datasets` you can specify, if you import a dataset that already exists, if a new dataset should be created or if the existing one should be overridden (defaults to `False`).
+The `default_country_code` option will force all datasets to have a country code (defaults to `UNSPECIFIED` because UNHCR extension use it).
 
 ### Web interface
 

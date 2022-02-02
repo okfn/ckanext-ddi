@@ -195,6 +195,14 @@ class DdiImporter(HarvesterBase):
         if pkg_dict.get('abbreviation'):
             pkg_dict['short_title'] = pkg_dict['abbreviation']
 
+        if not pkg_dict.get('country_codes'):
+            # geographies fields is now a required field.
+            # We need to ensure any dataset to have a "geographies" field filled
+            pkg_dict['country_codes'] = tk.config.get(
+                'ckanext.ddi.default_country_code',
+                'UNSPECIFIED'
+            )
+
         pkg_dict['ddi'] = True
 
         return pkg_dict
