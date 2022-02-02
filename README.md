@@ -54,7 +54,7 @@ Available options are:
 ckanext.ddi.default_license = CC0-1.0
 ckanext.ddi.allow_duplicates = True
 ckanext.ddi.override_datasets = False
-ckanext.ddi.default_conuntry_code = WORLD
+ckanext.ddi.default_country_code = WORLD
 ```
 
 The `config_file` is simply the path to the DDI-specific configuration of this extension (see below).
