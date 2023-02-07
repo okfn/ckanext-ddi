@@ -56,8 +56,8 @@ jobs:
         pip install -e git+https://github.com/ckan/ckanext-scheming.git@release-2.0.0#egg=ckanext-scheming
         pip install -r https://raw.githubusercontent.com/ckan/ckanext-scheming/release-2.0.0/requirements.txt
         # harvest
-        pip install -e git+https://github.com/ckan/ckanext-harvest.git@v1.4.1#egg=ckanext-harvest
-        pip install -r https://raw.githubusercontent.com/ckan/ckanext-harvest/v1.4.1/pip-requirements.txt
+        pip install -e git+https://github.com/ckan/ckanext-harvest.git@v1.4.2#egg=ckanext-harvest
+        pip install -r https://raw.githubusercontent.com/ckan/ckanext-harvest/v1.4.2/requirements.txt
         # DDI
         pip install -r requirements.txt
         pip install -r dev-requirements.txt
