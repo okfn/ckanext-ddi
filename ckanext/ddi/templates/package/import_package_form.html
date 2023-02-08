@@ -35,6 +35,7 @@
 
 
 <form class="dataset-form form-horizontal" method="post" enctype="multipart/form-data" action="import" data-module="basic-form">
+  {{ h.csrf_input() if 'csrf_input' in h }}
 
   {% block stages %}
     {{ h.snippet('package/snippets/stages.html', stages=stage) }}
