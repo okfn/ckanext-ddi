@@ -109,7 +109,7 @@ class ImportView(MethodView):
         errors = errors or {}
         error_summary = error_summary or {}
 
-        data['group_id'] = toolkit.request.params.get('group') or\
+        data['group_id'] = toolkit.request.args.get('group') or\
             toolkit.request.form.get('groups__0__id')
 
         stage = ['active']
