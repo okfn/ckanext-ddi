@@ -1,5 +1,8 @@
 # OKF DDI Changelog
 
+## v2.1.1 - 2023-08-21
+Update call to avoid deprecations
+
 ## v2.1.0 - 2023-02-07
 
 Preparing DDI for CKAN 2.10
