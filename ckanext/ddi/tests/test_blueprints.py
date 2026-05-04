@@ -1,40 +1,20 @@
-# -*- coding: utf-8 -*-
-
 import os
 import pytest
-import six
 import ckan.plugins.toolkit as toolkit
 from ckantoolkit.tests import factories
 
 
 def _assert_in_body(string, response):
-    if six.PY2:
-        assert string in response.body.decode('utf8')
-    else:
-        assert string in response.body
+    assert string in response.body
 
 
 def _post_request(app, url, form, files, environ, **kwargs):
-    try:
-        # CKAN 2.9
-        data = dict(form)
-        for field, filename in files.items():
-            data[field] = _load_test_data(filename)
-        return app.post(
-            url, data=data, environ_overrides=environ, follow_redirects=False, **kwargs
-        )
-    except TypeError:
-        # CKAN 2.8
-        return app.post(
-            url,
-            params=form,
-            upload_files=[
-                (field, filename, _load_test_data(filename).read(),)
-                for field, filename in files.items()
-            ],
-            extra_environ=environ,
-            **kwargs
-        )
+    data = dict(form)
+    for field, filename in files.items():
+        data[field] = _load_test_data(filename)
+    return app.post(
+        url, data=data, environ_overrides=environ, follow_redirects=False, **kwargs
+    )
 
 
 def _load_test_data(filename):
@@ -47,7 +27,7 @@ def _patch_storage_path(monkeypatch, tmpdir, ckan_config):
 
 @pytest.mark.usefixtures('clean_db', 'clean_index')
 @pytest.mark.ckan_config("ckan.webassets.path", "/tmp/webassets")
-class TestBlueprints(object):
+class TestBlueprints:
     def setup_method(self):
         sysadmin = factories.Sysadmin()
         self.extra_environ = {'REMOTE_USER': sysadmin['name']}
@@ -77,17 +57,10 @@ class TestBlueprints(object):
             app, '/dataset/import', {}, files, self.extra_environ, status=302
         )
         expected_id = 'ddi-test-1'
-        try:
-            toolkit.requires_ckan_version("2.9")
-            assert (
-                '/dataset/{}/resource/new'.format(expected_id)
-                in resp.headers['location']
-            )
-        except toolkit.CkanVersionException:
-            assert (
-                '/dataset/new_resource/{}'.format(expected_id)
-                in resp.headers['location']
-            )
+        assert (
+            '/dataset/{}/resource/new'.format(expected_id)
+            in resp.headers['location']
+        )
         dataset = toolkit.get_action('package_show')(
             {'ignore_auth': True}, {'id': expected_id}
         )
@@ -104,17 +77,10 @@ class TestBlueprints(object):
             app, '/dataset/import', {}, files, self.extra_environ, status=302
         )
         expected_id = 'ddi-test-1'
-        try:
-            toolkit.requires_ckan_version("2.9")
-            assert (
-                '/dataset/{}/resource/new'.format(expected_id)
-                in resp.headers['location']
-            )
-        except toolkit.CkanVersionException:
-            assert (
-                '/dataset/new_resource/{}'.format(expected_id)
-                in resp.headers['location']
-            )
+        assert (
+            '/dataset/{}/resource/new'.format(expected_id)
+            in resp.headers['location']
+        )
         dataset = toolkit.get_action('package_show')(
             {'ignore_auth': True}, {'id': expected_id}
         )
