@@ -4,7 +4,6 @@ import os
 import pytest
 import six
 import ckan.plugins.toolkit as toolkit
-import ckan.lib.uploader
 from ckantoolkit.tests import factories
 
 
