@@ -48,9 +48,9 @@ def _patch_storage_path(monkeypatch, tmpdir, ckan_config):
 @pytest.mark.usefixtures('clean_db', 'clean_index')
 @pytest.mark.ckan_config("ckan.webassets.path", "/tmp/webassets")
 class TestBlueprints(object):
-    def setup(self):
+    def setup_method(self):
         sysadmin = factories.Sysadmin()
-        self.extra_environ = {'REMOTE_USER': sysadmin['name'].encode('ascii')}
+        self.extra_environ = {'REMOTE_USER': sysadmin['name']}
 
     def test_form_display_unauthorized_user(self, app):
         app.get('/dataset/import', status=403)
