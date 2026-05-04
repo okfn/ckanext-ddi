@@ -46,9 +46,6 @@ jobs:
     steps:
     - uses: actions/checkout@v6
 
-    - name: Install system dependencies
-      run: sudo apk add gcc musl-dev python3-dev libffi-dev openssl-dev cargo
-
     - name: Install requirements
       run: |
         pip install --upgrade pip
@@ -69,8 +66,3 @@ jobs:
 
     - name: Run tests
       run: pytest --ckan-ini=test.ini --cov=ckanext.ddi --cov-report xml --disable-warnings ckanext/ddi/tests
-
-    - name: Upload coverage report to codecov
-      uses: codecov/codecov-action@v3
-      with:
-        file: ./coverage.xml
