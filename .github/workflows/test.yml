@@ -59,8 +59,7 @@ jobs:
       run: |
         pip install --upgrade pip
         # scheming
-        pip install -e "git+https://github.com/ckan/ckanext-scheming.git@${{ matrix.scheming-ref }}#egg=ckanext-scheming"
-        pip install -r "https://raw.githubusercontent.com/ckan/ckanext-scheming/${{ matrix.scheming-ref }}/requirements.txt"
+        pip install -e "git+https://github.com/ckan/ .git@${{ matrix.scheming-ref }}#egg=ckanext-scheming"
         # harvest
         pip install -e "git+https://github.com/ckan/ckanext-harvest.git@${{ matrix.harvest-ref }}#egg=ckanext-harvest"
         pip install -r "https://raw.githubusercontent.com/ckan/ckanext-harvest/${{ matrix.harvest-ref }}/requirements.txt"
