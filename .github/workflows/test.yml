@@ -71,7 +71,6 @@ jobs:
     - name: Setup DB
       run: |
         ckan -c test.ini db upgrade
-        ckan -c test.ini db upgrade -p harvest
 
     - name: Run tests
       run: pytest --ckan-ini=test.ini --cov=ckanext.ddi --cov-report xml --disable-warnings ckanext/ddi/tests
