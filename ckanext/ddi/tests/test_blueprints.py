@@ -8,12 +8,12 @@ def _assert_in_body(string, response):
     assert string in response.body
 
 
-def _post_request(app, url, form, files, environ, **kwargs):
+def _post_request(app, url, form, files, headers, **kwargs):
     data = dict(form)
     for field, filename in files.items():
         data[field] = _load_test_data(filename)
     return app.post(
-        url, data=data, environ_overrides=environ, follow_redirects=False, **kwargs
+        url, data=data, headers=headers, follow_redirects=False, **kwargs
     )
 
 
@@ -29,8 +29,8 @@ def _patch_storage_path(monkeypatch, tmpdir, ckan_config):
 @pytest.mark.ckan_config("ckan.webassets.path", "/tmp/webassets")
 class TestBlueprints:
     def setup_method(self):
-        sysadmin = factories.Sysadmin()
-        self.extra_environ = {'REMOTE_USER': sysadmin['name']}
+        sysadmin = factories.SysadminWithToken()
+        self.headers = {'Authorization': sysadmin['token']}
 
     def test_form_display_unauthorized_user(self, app):
         app.get('/dataset/import', status=403)
@@ -40,7 +40,7 @@ class TestBlueprints:
         _patch_storage_path(monkeypatch, tmpdir, ckan_config)
         resp = app.get(
             '/dataset/import',
-            extra_environ=self.extra_environ,
+            headers=self.headers,
             status=200,
         )
         _assert_in_body('<input id="field-upload" type="file" name="upload"', resp)
@@ -54,7 +54,7 @@ class TestBlueprints:
         _patch_storage_path(monkeypatch, tmpdir, ckan_config)
         files = {'upload': 'ddi_test.xml'}
         resp = _post_request(
-            app, '/dataset/import', {}, files, self.extra_environ, status=302
+            app, '/dataset/import', {}, files, self.headers, status=302
         )
         expected_id = 'ddi-test-1'
         assert (
@@ -74,7 +74,7 @@ class TestBlueprints:
         _patch_storage_path(monkeypatch, tmpdir, ckan_config)
         files = {'upload': 'ddi_test.xml', 'rdf_upload': 'ddi_test.rdf'}
         resp = _post_request(
-            app, '/dataset/import', {}, files, self.extra_environ, status=302
+            app, '/dataset/import', {}, files, self.headers, status=302
         )
         expected_id = 'ddi-test-1'
         assert (
@@ -107,16 +107,16 @@ class TestBlueprints:
         _patch_storage_path(monkeypatch, tmpdir, ckan_config)
         files = {'upload': 'ddi_test.xml'}
         resp = _post_request(
-            app, '/dataset/import', {}, files, self.extra_environ, status=302
+            app, '/dataset/import', {}, files, self.headers, status=302
         )
         resp = _post_request(
-            app, '/dataset/import', {}, files, self.extra_environ, status=200
+            app, '/dataset/import', {}, files, self.headers, status=200
         )
         _assert_in_body('Dataset already exists and duplicates are not allowed', resp)
 
     def test_form_submit_invalid(self, app, monkeypatch, tmpdir, ckan_config):
         _patch_storage_path(monkeypatch, tmpdir, ckan_config)
         resp = _post_request(
-            app, '/dataset/import', {}, {}, self.extra_environ, status=200
+            app, '/dataset/import', {}, {}, self.headers, status=200
         )
         _assert_in_body('An XML file (uploaded file or URL) is required', resp)
