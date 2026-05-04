@@ -14,48 +14,20 @@ import ckan.lib.navl.dictization_functions as dict_fns
 import ckan.logic as logic
 import ckan.model as model
 import ckan.plugins.toolkit as toolkit
+from ckan.views.home import CACHE_PARAMETERS
+from ckan.views.dataset import _get_pkg_template, _setup_template_variables
 
 import ckanapi
 
 from ckanext.ddi.importer import ddiimporter
 
+
 log = logging.getLogger(__name__)
-
-try:
-    # CKAN 2.9
-    from ckan.views.home import CACHE_PARAMETERS
-except ImportError:
-    # CKAN <= 2.8
-    from ckan.controllers.home import CACHE_PARAMETERS
-
-try:
-    # CKAN 2.9
-    from ckan.views.dataset import _get_pkg_template, _setup_template_variables
-except ImportError:
-    # CKAN <= 2.8: these functions don't exist in core yet
-    from ckan.lib.plugins import lookup_package_plugin
-
-    def _get_pkg_template(template_type, package_type=None):
-        pkg_plugin = lookup_package_plugin(package_type)
-        method = getattr(pkg_plugin, template_type)
-        try:
-            return method(package_type)
-        except TypeError as err:
-            if u'takes 1' not in str(err) and u'takes exactly 1' not in str(err):
-                raise
-            return method()
-
-    def _setup_template_variables(context, data_dict, package_type=None):
-        return lookup_package_plugin(package_type).setup_template_variables(
-            context, data_dict
-        )
-
-
 ddi_import_blueprint = Blueprint(
     'ddi_import',
     __name__,
-    url_prefix=u'/dataset',
-    url_defaults={u'package_type': u'dataset'},
+    url_prefix='/dataset',
+    url_defaults={'package_type': 'dataset'},
 )
 
 
@@ -131,16 +103,16 @@ class ImportView(MethodView):
         context = self._get_context()
         _setup_template_variables(context, {}, package_type=package_type)
 
-        new_template = _get_pkg_template(u'new_template', package_type)
+        new_template = _get_pkg_template('new_template', package_type)
 
         return toolkit.render(
             new_template,
             extra_vars={
-                u'form_vars': form_vars,
-                u'form_snippet': form_snippet,
-                u'dataset_type': package_type,
-                u'resources_json': json.dumps(data.get('resources', [])),
-                u'errors_json': json.dumps(errors),
+                'form_vars': form_vars,
+                'form_snippet': form_snippet,
+                'dataset_type': package_type,
+                'resources_json': json.dumps(data.get('resources', [])),
+                'errors_json': json.dumps(errors),
             },
         )
 
@@ -212,18 +184,11 @@ class ImportView(MethodView):
                 os.remove(file_path)
 
         if pkg_id is not None:
-            try:
-                toolkit.requires_ckan_version("2.9")
-                url = toolkit.h.url_for(
-                    u'{}_resource.new'.format(package_type),
-                    id=pkg_id,
-                )
-            except toolkit.CkanVersionException:
-                url = toolkit.h.url_for(
-                    controller='package',
-                    action='new_resource',
-                    id=pkg_id,
-                )
+            url = toolkit.h.url_for(
+                '{}_resource.new'.format(package_type),
+                id=pkg_id,
+            )
+
             return toolkit.redirect_to(url)
         else:
             return toolkit.redirect_to(toolkit.h.url_for('ddi_import.import'))
@@ -242,7 +207,7 @@ class PackageImportError(Exception):
 
 
 ddi_import_blueprint.add_url_rule(
-    rule=u'/import',
-    view_func=ImportView.as_view(str(u'import')),
+    rule='/import',
+    view_func=ImportView.as_view(str('import')),
     strict_slashes=False,
 )

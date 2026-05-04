@@ -4,10 +4,10 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
         with:
-          python-version: '3.8'
+          python-version: '3.12'
       - name: Install requirements
         run: pip install -r dev-requirements.txt
       - name: Check coding standards
@@ -17,16 +17,25 @@ jobs:
     needs: lint
     strategy:
       matrix:
-        ckan-version: [2.9, 2.9-py2, 2.8]
+        include:
+          - ckan-version: "2.10"
+            solr-image: "ckan/ckan-solr:2.10"
+            harvest-ref: "v1.5.6"
+            scheming-ref: "release-3.0.0"
+          - ckan-version: "2.11"
+            solr-image: "ckan/ckan-solr:2.11-solr9"
+            harvest-ref: "v1.6.2"
+            scheming-ref: "release-3.1.0"
       fail-fast: false
 
     name: CKAN ${{ matrix.ckan-version }}
     runs-on: ubuntu-latest
     container:
-      image: openknowledge/ckan-dev:${{ matrix.ckan-version }}
+      image: ckan/ckan-dev:${{ matrix.ckan-version }}
+      options: --user root
     services:
       solr:
-        image: ckan/ckan-solr-dev:${{ matrix.ckan-version }}
+        image: ${{ matrix.solr-image }}
       postgres:
         image: ckan/ckan-postgres-dev:${{ matrix.ckan-version }}
         env:
@@ -35,7 +44,7 @@ jobs:
           POSTGRES_DB: postgres
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
       redis:
-          image: redis:3
+        image: redis:3
     env:
       CKAN_SQLALCHEMY_URL: postgresql://ckan_default:pass@postgres/ckan_test
       CKAN_DATASTORE_WRITE_URL: postgresql://datastore_write:pass@postgres/datastore_test
@@ -44,41 +53,24 @@ jobs:
       CKAN_REDIS_URL: redis://redis:6379/1
 
     steps:
-    - uses: actions/checkout@v2
-
-    - name: Install system dependencies
-      run: sudo apk add gcc musl-dev python3-dev libffi-dev openssl-dev cargo
+    - uses: actions/checkout@v6
 
     - name: Install requirements
       run: |
         pip install --upgrade pip
         # scheming
-        pip install -e git+https://github.com/ckan/ckanext-scheming.git@release-2.0.0#egg=ckanext-scheming
-        pip install -r https://raw.githubusercontent.com/ckan/ckanext-scheming/release-2.0.0/requirements.txt
+        pip install -e "git+https://github.com/ckan/ckanext-scheming.git@${{ matrix.scheming-ref }}#egg=ckanext-scheming"
         # harvest
-        pip install -e git+https://github.com/ckan/ckanext-harvest.git@v1.4.2#egg=ckanext-harvest
-        pip install -r https://raw.githubusercontent.com/ckan/ckanext-harvest/v1.4.2/requirements.txt
+        pip install -e "git+https://github.com/ckan/ckanext-harvest.git@${{ matrix.harvest-ref }}#egg=ckanext-harvest"
+        pip install -r "https://raw.githubusercontent.com/ckan/ckanext-harvest/${{ matrix.harvest-ref }}/requirements.txt"
         # DDI
         pip install -r requirements.txt
         pip install -r dev-requirements.txt
         pip install -e .
 
-    - name: Setup extension (CKAN >= 2.9)
-      if: ${{ matrix.ckan-version != '2.8' }}
+    - name: Setup DB
       run: |
-        ckan -c test.ini db init
-        ckan -c test.ini harvester initdb
-
-    - name: Setup extension (CKAN < 2.9)
-      if: ${{ matrix.ckan-version == '2.8' }}
-      run: |
-        paster --plugin=ckan db init -c test.ini
-        paster --plugin=ckanext-harvest harvester initdb -c test.ini
+        ckan -c test.ini db upgrade
 
     - name: Run tests
       run: pytest --ckan-ini=test.ini --cov=ckanext.ddi --cov-report xml --disable-warnings ckanext/ddi/tests
-
-    - name: Upload coverage report to codecov
-      uses: codecov/codecov-action@v1
-      with:
-        file: ./coverage.xml

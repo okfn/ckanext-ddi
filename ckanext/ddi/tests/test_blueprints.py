@@ -1,41 +1,21 @@
-# -*- coding: utf-8 -*-
-
 import os
+from types import SimpleNamespace
 import pytest
-import six
 import ckan.plugins.toolkit as toolkit
-import ckan.lib.uploader
 from ckantoolkit.tests import factories
 
 
 def _assert_in_body(string, response):
-    if six.PY2:
-        assert string in response.body.decode('utf8')
-    else:
-        assert string in response.body
+    assert string in response.body
 
 
-def _post_request(app, url, form, files, environ, **kwargs):
-    try:
-        # CKAN 2.9
-        data = dict(form)
-        for field, filename in files.items():
-            data[field] = _load_test_data(filename)
-        return app.post(
-            url, data=data, environ_overrides=environ, follow_redirects=False, **kwargs
-        )
-    except TypeError:
-        # CKAN 2.8
-        return app.post(
-            url,
-            params=form,
-            upload_files=[
-                (field, filename, _load_test_data(filename).read(),)
-                for field, filename in files.items()
-            ],
-            extra_environ=environ,
-            **kwargs
-        )
+def _post_request(app, url, form, files, headers, **kwargs):
+    data = dict(form)
+    for field, filename in files.items():
+        data[field] = _load_test_data(filename)
+    return app.post(
+        url, data=data, headers=headers, follow_redirects=False, **kwargs
+    )
 
 
 def _load_test_data(filename):
@@ -43,26 +23,31 @@ def _load_test_data(filename):
 
 
 def _patch_storage_path(monkeypatch, tmpdir, ckan_config):
-    monkeypatch.setitem(ckan_config, u'ckan.storage_path', str(tmpdir))
-    monkeypatch.setattr(ckan.lib.uploader, u'_storage_path', str(tmpdir))
+    monkeypatch.setitem(ckan_config, 'ckan.storage_path', str(tmpdir))
+
+
+@pytest.fixture
+def setup_data():
+    """test setup data"""
+    obj = SimpleNamespace()
+    # Create CKAN users
+    obj.sysadmin = factories.SysadminWithToken()
+    return obj
 
 
 @pytest.mark.usefixtures('clean_db', 'clean_index')
 @pytest.mark.ckan_config("ckan.webassets.path", "/tmp/webassets")
-class TestBlueprints(object):
-    def setup(self):
-        sysadmin = factories.Sysadmin()
-        self.extra_environ = {'REMOTE_USER': sysadmin['name'].encode('ascii')}
+class TestBlueprints:
 
     def test_form_display_unauthorized_user(self, app):
         app.get('/dataset/import', status=403)
         app.post('/dataset/import', status=403)
 
-    def test_form_display(self, app, monkeypatch, tmpdir, ckan_config):
+    def test_form_display(self, app, monkeypatch, tmpdir, ckan_config, setup_data):
         _patch_storage_path(monkeypatch, tmpdir, ckan_config)
         resp = app.get(
             '/dataset/import',
-            extra_environ=self.extra_environ,
+            headers={'Authorization': setup_data.sysadmin['token']},
             status=200,
         )
         _assert_in_body('<input id="field-upload" type="file" name="upload"', resp)
@@ -71,25 +56,19 @@ class TestBlueprints(object):
         )
 
     def test_form_submit_success_xml_file_from_upload(
-        self, app, monkeypatch, tmpdir, ckan_config
+        self, app, monkeypatch, tmpdir, ckan_config, setup_data
     ):
         _patch_storage_path(monkeypatch, tmpdir, ckan_config)
         files = {'upload': 'ddi_test.xml'}
+        headers = {'Authorization': setup_data.sysadmin['token']}
         resp = _post_request(
-            app, '/dataset/import', {}, files, self.extra_environ, status=302
+            app, '/dataset/import', {}, files, headers, status=302
         )
         expected_id = 'ddi-test-1'
-        try:
-            toolkit.requires_ckan_version("2.9")
-            assert (
-                '/dataset/{}/resource/new'.format(expected_id)
-                in resp.headers['location']
-            )
-        except toolkit.CkanVersionException:
-            assert (
-                '/dataset/new_resource/{}'.format(expected_id)
-                in resp.headers['location']
-            )
+        assert (
+            '/dataset/{}/resource/new'.format(expected_id)
+            in resp.headers['location']
+        )
         dataset = toolkit.get_action('package_show')(
             {'ignore_auth': True}, {'id': expected_id}
         )
@@ -98,25 +77,19 @@ class TestBlueprints(object):
         assert 'ddi_test.xml' in dataset['resources'][0]['url']
 
     def test_form_submit_success_xml_and_rdf_files_from_uploads(
-        self, app, monkeypatch, tmpdir, ckan_config
+        self, app, monkeypatch, tmpdir, ckan_config, setup_data
     ):
         _patch_storage_path(monkeypatch, tmpdir, ckan_config)
         files = {'upload': 'ddi_test.xml', 'rdf_upload': 'ddi_test.rdf'}
+        headers = {'Authorization': setup_data.sysadmin['token']}
         resp = _post_request(
-            app, '/dataset/import', {}, files, self.extra_environ, status=302
+            app, '/dataset/import', {}, files, headers, status=302
         )
         expected_id = 'ddi-test-1'
-        try:
-            toolkit.requires_ckan_version("2.9")
-            assert (
-                '/dataset/{}/resource/new'.format(expected_id)
-                in resp.headers['location']
-            )
-        except toolkit.CkanVersionException:
-            assert (
-                '/dataset/new_resource/{}'.format(expected_id)
-                in resp.headers['location']
-            )
+        assert (
+            '/dataset/{}/resource/new'.format(expected_id)
+            in resp.headers['location']
+        )
         dataset = toolkit.get_action('package_show')(
             {'ignore_auth': True}, {'id': expected_id}
         )
@@ -139,20 +112,22 @@ class TestBlueprints(object):
         # TODO: test importing from URLs, mock the HTTP requests with responses
     """
 
-    def test_duplicate_dataset(self, app, monkeypatch, tmpdir, ckan_config):
+    def test_duplicate_dataset(self, app, monkeypatch, tmpdir, ckan_config, setup_data):
         _patch_storage_path(monkeypatch, tmpdir, ckan_config)
         files = {'upload': 'ddi_test.xml'}
+        headers = {'Authorization': setup_data.sysadmin['token']}
         resp = _post_request(
-            app, '/dataset/import', {}, files, self.extra_environ, status=302
+            app, '/dataset/import', {}, files, headers, status=302
         )
         resp = _post_request(
-            app, '/dataset/import', {}, files, self.extra_environ, status=200
+            app, '/dataset/import', {}, files, headers, status=200
         )
         _assert_in_body('Dataset already exists and duplicates are not allowed', resp)
 
-    def test_form_submit_invalid(self, app, monkeypatch, tmpdir, ckan_config):
+    def test_form_submit_invalid(self, app, monkeypatch, tmpdir, ckan_config, setup_data):
         _patch_storage_path(monkeypatch, tmpdir, ckan_config)
+        headers = {'Authorization': setup_data.sysadmin['token']}
         resp = _post_request(
-            app, '/dataset/import', {}, {}, self.extra_environ, status=200
+            app, '/dataset/import', {}, {}, headers, status=200
         )
         _assert_in_body('An XML file (uploaded file or URL) is required', resp)

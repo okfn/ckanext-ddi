@@ -1,5 +1,5 @@
-ckantoolkit>=0.0.3
+ckantoolkit
 pytest
 pytest-ckan
 pytest-cov
-flake8==3.8.4
+flake8
