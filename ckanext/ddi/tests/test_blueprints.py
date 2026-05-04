@@ -23,7 +23,7 @@ def _load_test_data(filename):
 
 
 def _patch_storage_path(monkeypatch, tmpdir, ckan_config):
-    monkeypatch.setitem(ckan_config, u'ckan.storage_path', str(tmpdir))
+    monkeypatch.setitem(ckan_config, 'ckan.storage_path', str(tmpdir))
 
 
 @pytest.fixture

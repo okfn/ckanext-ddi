@@ -26,8 +26,8 @@ log = logging.getLogger(__name__)
 ddi_import_blueprint = Blueprint(
     'ddi_import',
     __name__,
-    url_prefix=u'/dataset',
-    url_defaults={u'package_type': u'dataset'},
+    url_prefix='/dataset',
+    url_defaults={'package_type': 'dataset'},
 )
 
 
@@ -103,16 +103,16 @@ class ImportView(MethodView):
         context = self._get_context()
         _setup_template_variables(context, {}, package_type=package_type)
 
-        new_template = _get_pkg_template(u'new_template', package_type)
+        new_template = _get_pkg_template('new_template', package_type)
 
         return toolkit.render(
             new_template,
             extra_vars={
-                u'form_vars': form_vars,
-                u'form_snippet': form_snippet,
-                u'dataset_type': package_type,
-                u'resources_json': json.dumps(data.get('resources', [])),
-                u'errors_json': json.dumps(errors),
+                'form_vars': form_vars,
+                'form_snippet': form_snippet,
+                'dataset_type': package_type,
+                'resources_json': json.dumps(data.get('resources', [])),
+                'errors_json': json.dumps(errors),
             },
         )
 
@@ -185,7 +185,7 @@ class ImportView(MethodView):
 
         if pkg_id is not None:
             url = toolkit.h.url_for(
-                u'{}_resource.new'.format(package_type),
+                '{}_resource.new'.format(package_type),
                 id=pkg_id,
             )
 
@@ -207,7 +207,7 @@ class PackageImportError(Exception):
 
 
 ddi_import_blueprint.add_url_rule(
-    rule=u'/import',
-    view_func=ImportView.as_view(str(u'import')),
+    rule='/import',
+    view_func=ImportView.as_view(str('import')),
     strict_slashes=False,
 )
