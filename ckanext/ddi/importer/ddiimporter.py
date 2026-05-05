@@ -165,7 +165,10 @@ class DdiImporter(HarvesterBase):
                 'private',
                 'visibility',  # for resources
                 'license_id',
+                # TODO we need a better way to allow ALL external fields from different user schemas
                 'external_access_level',
+                'geographies',
+                'outcome_areas',
             ):
                 if field in data:
                     pkg_dict[field] = data[field]
